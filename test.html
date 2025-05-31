@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Punjabi Hotel - Order System</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 10px;
+      background-color: #1A202C;
+      margin: 0;
+      font-size: 14px; /* Reduced base font size for mobile */
+      color: #FFFFFF;
+    }
+    h1 {
+      text-align: center;
+      color: #13cdd0;
+      font-size: 1.5em; /* Slightly smaller for mobile */
+      margin-bottom: 8px;
+    }
+    .navbar {
+      background-color: #1B5E20;
+      padding: 8px 10px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .navbar-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .nav-menu {
+      display: flex;
+      gap: 8px;
+    }
+    .nav-menu button {
+      padding: 8px 12px;
+      background-color: #0C6B6E;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px; /* Smaller buttons for mobile */
+      touch-action: manipulation;
+      min-width: 44px; /* Ensure touch target size */
+    }
+    .nav-menu .clear-btn {
+      background-color: #B71C1C;
+    }
+    .hamburger {
+      display: none;
+      font-size: 24px;
+      background: none;
+      border: none;
+      color: #FFFFFF;
+      cursor: pointer;
+      padding: 8px;
+    }
+    @media (max-width: 400px) { /* Adjusted for Samsung F15’s ~360-400px CSS width */
+      .hamburger {
+        display: block;
+      }
+      .nav-menu {
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        top: 50px;
+        left: 0;
+        right: 0;
+        background-color: #1B5E20;
+        padding: 8px;
+        border-radius: 0 0 6px 6px;
+        transition: transform 0.3s ease-in-out;
+        transform: translateY(-100%);
+      }
+      .nav-menu.active {
+        display: flex;
+        transform: translateY(0);
+      }
+      .nav-menu button {
+        width: 100%;
+        margin-bottom: 8px;
+        text-align: left;
+        font-size: 14px;
+        padding: 10px;
+      }
+    }
+    .tables-container {
+      display: grid;
+      grid-template-columns: 1fr; /* Single column for mobile */
+      gap: 12px;
+      margin-top: 15px;
+    }
+    .table-card {
+      background: #F7FAF7;
+      padding: 12px;
+      border-radius: 10px;
+      border: 2px solid #E0E0E0;
+      box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+      text-align: center;
+      color: #333333;
+    }
+    .table-card h3 {
+      margin-bottom: 8px;
+      font-size: 1.1em;
+      color: #333333;
+    }
+    .order-summary {
+      font-size: 12px; /* Smaller for mobile */
+      margin-top: 8px;
+      color: #4A4A4A;
+      text-align: left;
+      line-height: 1.3;
+    }
+    button {
+      padding: 8px 12px;
+      background-color: #0C6B6E;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      margin: 4px 2px;
+      cursor: pointer;
+      font-size: 12px;
+      touch-action: manipulation;
+      min-width: 44px; /* Ensure touch target size */
+    }
+    .printed-btn {
+      background-color: #B71C1C !important;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: flex-start;
+      overflow-y: auto;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: #F4F4F4;
+      padding: 12px;
+      border-radius: 10px;
+      width: 95%; /* Slightly wider for small screens */
+      max-width: 360px; /* Constrain for F15 */
+      margin: 15px auto;
+      position: relative;
+      box-sizing: border-box;
+      color: #333333;
+    }
+    .close-btn {
+      position: absolute;
+      right: 8px;
+      top: 5px;
+      font-size: 20px;
+      cursor: pointer;
+      color: #888;
+    }
+    .item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .item img {
+      width: 40px; /* Smaller images for mobile */
+      height: 40px;
+      border-radius: 6px;
+      object-fit: cover;
+      border: 1px solid #E0E0E0;
+    }
+    .item label {
+      flex: 1;
+      font-size: 12px; /* Smaller labels */
+      color: #333333;
+    }
+    .quantity-control {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .quantity-control input {
+      width: 40px;
+      padding: 6px;
+      text-align: center;
+      border: 1px solid #E0E0E0;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #333333;
+    }
+    .minus-btn,
+    .plus-btn {
+      padding: 6px 10px;
+      font-size: 16px;
+      line-height: 1;
+      background-color: #0C6B6E;
+      min-width: 44px; /* Ensure touch target size */
+    }
+    select,
+    input[type="text"],
+    input[type="tel"],
+    input[type="date"] {
+      padding: 6px;
+      margin-bottom: 12px;
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 12px;
+      border: 1px solid #E0E0E0;
+      color: #333333;
+    }
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 11px; /* Smaller table text */
+    }
+    .history-table th,
+    .history-table td {
+      border: 1px solid #E0E0E0;
+      padding: 5px;
+      text-align: left;
+      color: #333333;
+    }
+    .history-table th {
+      background-color: #135354;
+      color: white;
+    }
+    .bill-content {
+      font-family: Arial, sans-serif;
+      padding: 12px;
+      text-align: center;
+      font-size: 12px;
+      color: #333333;
+    }
+    .bill-content h2 {
+      margin-bottom: 8px;
+      color: #1B5E20;
+      font-size: 1.3em;
+    }
+    .bill-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 11px;
+    }
+    .bill-content table th,
+    .bill-content table td {
+      border: 1px solid #E0E0E0;
+      padding: 5px;
+      text-align: left;
+      color: #333333;
+    }
+    .bill-content table th {
+      background-color: #E0E0E0;
+    }
+    .bill-content .total {
+      font-weight: bold;
+      text-align: right;
+      margin-top: 8px;
+      color: #333333;
+    }
+    @media print {
+      body * {
+        display: none;
+      }
+      .bill-content,
+      .bill-content * {
+        display: block;
+      }
+    }
+    @media (max-width: 400px) { /* Specific for Samsung F15 */
+      .table-card {
+        padding: 10px;
+      }
+      .table-card h3 {
+        font-size: 1em;
+      }
+      .order-summary {
+        font-size: 11px;
+      }
+      .modal-content h2 {
+        font-size: 1.2em;
+      }
+      .item {
+        flex-wrap: wrap; /* Allow wrapping for very narrow screens */
+      }
+      .item label {
+        font-size: 11px;
+      }
+      .quantity-control input {
+        width: 36px;
+      }
+      .minus-btn,
+      .plus-btn {
+        padding: 6px 8px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+<h1>Punjabi Hotel - Order System</h1>
+<div class="navbar">
+  <div class="navbar-container">
+    <button class="hamburger" onclick="toggleNavMenu()">☰</button>
+    <div class="nav-menu top-buttons">
+      <button class="global-total-btn" onclick="showAllTablesDayTotal()">Show All Tables Day Total</button>
+      <button class="table-total-btn" onclick="openTableTotalModal()">Show Table Day Total</button>
+      <button class="item-breakdown-btn" onclick="showDayItemBreakdown()">Show Day Item Breakdown</button>
+      <button class="history-btn" onclick="openHistoryModal()">View Order History</button>
+      <button class="history-btn" onclick="openDateSelectModal()">View History by Date</button>
+      <button class="clear-btn" onclick="clearAllOrders()">Clear All Orders</button>
+    </div>
+  </div>
+</div>
+<div class="tables-container" id="tablesContainer"></div>
+
+<div id="orderModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeModal()">×</span>
+    <h2>Take Order - Table <span id="modalTableNumber"></span></h2>
+    <form id="orderForm">
+      <label for="orderSelect">Select Order:</label>
+      <select id="orderSelect" name="orderSelect" onchange="loadOrderItems()">
+        <option value="new">New Order</option>
+      </select>
+
+      <!-- Starters -->
+      <h3>🫓 Starters</h3>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Amritsari Paneer Tikka">
+        <label>Amritsari Paneer Tikka (₹150):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="amritsari_paneer_tikka" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Hara Bhara Kabab">
+        <label>Hara Bhara Kabab (₹120):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="hara_bhara_kabab" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Veg Pakora">
+        <label>Veg Pakora (₹100):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="veg_pakora" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Corn Tikki">
+        <label>Corn Tikki (₹110):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="corn_tikki" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Tandoori Mushroom">
+        <label>Tandoori Mushroom (₹140):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="tandoori_mushroom" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Stuffed Paneer Roll">
+        <label>Stuffed Paneer Roll (₹130):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="stuffed_paneer_roll" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+
+      <!-- Main Course -->
+      <h3>🍛 Main Course</h3>
+      <h4>Dal Specialties</h4>
+      <div class="item">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Dal_Tadka.jpg" alt="Dal Makhani">
+        <label>Dal Makhani (₹120):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="dal_makhani" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Dal Tadka">
+        <label>Dal Tadka (₹100):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="dal_tadka" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Maa Di Dal">
+        <label>Maa Di Dal (₹110):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="maa_di_dal" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <h4>Paneer Delights</h4>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Shahi Paneer">
+        <label>Shahi Paneer (₹180):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="shahi_paneer" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Kadai Paneer">
+        <label>Kadai Paneer (₹170):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="kadai_paneer" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Paneer Butter Masala">
+        <label>Paneer Butter Masala (₹190):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="paneer_butter_masala" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Palak_Paneer.jpg/640px-Palak_Paneer.jpg" alt="Palak Paneer">
+        <label>Palak Paneer (₹170):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="palak_paneer" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Paneer Bhurji">
+        <label>Paneer Bhurji (₹160):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="paneer_bhurji" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <h4>Other Curries</h4>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Chole">
+        <label>Chole (₹130):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="chole" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Rajma Masala">
+        <label>Rajma Masala (₹120):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="rajma_masala" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Aloo Gobhi">
+        <label>Aloo Gobhi (₹110):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="aloo_gobhi" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Baingan Bharta">
+        <label>Baingan Bharta (₹120):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="baingan_bharta" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Mix Veg Curry">
+        <label>Mix Veg Curry (₹130):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="mix_veg_curry" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Sarson Da Saag">
+        <label>Sarson Da Saag (₹140):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="sarson_da_saag" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+
+      <!-- Rice & Pulao -->
+      <h3>🍚 Rice & Pulao</h3>
+      <div class="item">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/4/40/Steamed_Basmati_Rice.jpg" alt="Steamed Basmati Rice">
+        <label>Steamed Basmati Rice (₹80):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="steamed_basmati_rice" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Jeera Rice">
+        <label>Jeera Rice (₹90):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="jeera_rice" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Veg Pulao">
+        <label>Veg Pulao (₹100):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="veg_pulao" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Kashmiri Pulao">
+        <label>Kashmiri Pulao (₹120):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="kashmiri_pulao" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+
+      <!-- Breads -->
+      <h3>🫓 Breads</h3>
+      <div class="item">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/5/5a/Indian_Roti.jpg" alt="Tandoori Roti">
+        <label>Tandoori Roti (₹15):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="tandoori_roti" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Butter Naan">
+        <label>Butter Naan (₹30):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="butter_naan" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Plain Naan">
+        <label>Plain Naan (₹25):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="plain_naan" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Lachha Paratha">
+        <label>Lachha Paratha (₹35):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="lachha_paratha" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Missi Roti">
+        <label>Missi Roti (₹20):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="missi_roti" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Makki Di Roti">
+        <label>Makki Di Roti (₹25):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="makki_di_roti" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+
+      <!-- Sides & Salads -->
+      <h3>🥗 Sides & Salads</h3>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Boondi Raita">
+        <label>Boondi Raita (₹50):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="boondi_raita" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Cucumber Raita">
+        <label>Cucumber Raita (₹50):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="cucumber_raita" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Plain Curd">
+        <label>Plain Curd (₹40):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="plain_curd" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Green Salad">
+        <label>Green Salad (₹60):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="green_salad" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Onion-Lemon Platter">
+        <label>Onion-Lemon Platter (₹30):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="onion_lemon_platter" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+
+      <!-- Beverages -->
+      <h3>🍹 Beverages</h3>
+      <div class="item">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/8/86/Lassi_Punjabi.jpg" alt="Sweet Lassi">
+        <label>Sweet Lassi (₹40):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="sweet_lassi" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Salted Lassi">
+        <label>Salted Lassi (₹40):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="salted_lassi" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Mango Lassi">
+        <label>Mango Lassi (₹50):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="mango_lassi" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Masala Chaas">
+        <label>Masala Chaas (₹40):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="masala_chaas" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Fresh Lime Soda">
+        <label>Fresh Lime Soda (₹30):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="fresh_lime_soda" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Chai">
+        <label>Chai (Punjabi Style) (₹20):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="chai" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+
+      <!-- Desserts -->
+      <h3>🍨 Desserts</h3>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Gulab Jamun">
+        <label>Gulab Jamun (₹60):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="gulab_jamun" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Gajar Ka Halwa">
+        <label>Gajar Ka Halwa (₹70):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="gajar_ka_halwa" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Rasmalai">
+        <label>Rasmalai (₹80):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="rasmalai" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Phirni">
+        <label>Phirni (₹70):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="phirni" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+      <div class="item">
+        <img src="https://via.placeholder.com/50" alt="Kesar Kulfi">
+        <label>Kesar Kulfi (₹80):</label>
+        <div class="quantity-control">
+          <button type="button" class="minus-btn">-</button>
+          <input type="text" name="kesar_kulfi" value="0" readonly />
+          <button type="button" class="plus-btn">+</button>
+        </div>
+      </div>
+
+      <button type="submit" id="addToOrderBtn">Add to Order</button>
+    </form>
+  </div>
+</div>
+
+<div id="tableTotalModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeTableTotalModal()">×</span>
+    <h2>Select Table for Day Total</h2>
+    <form id="tableTotalForm">
+      <label for="tableSelect">Select Table:</label>
+      <select id="tableSelect" name="tableSelect">
+        <option value="" disabled selected>Select a table</option>
+        <option value="1">Table 1</option>
+        <option value="2">Table 2</option>
+        <option value="3">Table 3</option>
+        <option value="4">Table 4</option>
+        <option value="5">Table 5</option>
+        <option value="6">Table 6</option>
+        <option value="7">Table 7</option>
+        <option value="8">Table 8</option>
+        <option value="9">Table 9</option>
+        <option value="10">Table 10</option>
+      </select>
+      <button type="submit">Show Table Day Total</button>
+    </form>
+  </div>
+</div>
+
+<div id="historyModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeHistoryModal()">×</span>
+    <h2>View Order History</h2>
+    <form id="historyForm">
+      <label for="historyTableSelect">Select Table:</label>
+      <select id="historyTableSelect" name="historyTableSelect" onchange="displayOrderHistory()">
+        <option value="" disabled selected>Select a table</option>
+        <option value="1">Table 1</option>
+        <option value="2">Table 2</option>
+        <option value="3">Table 3</option>
+        <option value="4">Table 4</option>
+        <option value="5">Table 5</option>
+        <option value="6">Table 6</option>
+        <option value="7">Table 7</option>
+        <option value="8">Table 8</option>
+        <option value="9">Table 9</option>
+        <option value="10">Table 10</option>
+      </select>
+    </form>
+    <div id="historyContent">
+      <p>Select a table to view its order history.</p>
+    </div>
+  </div>
+</div>
+
+<div id="dateSelectModal" class="modal">
+  <div class twenty="modal-content">
+    <span class="close-btn" onclick="closeDateSelectModal()">×</span>
+    <h2>Select Date for Order History</h2>
+    <form id="dateSelectForm">
+      <label for="historyDate">Select Date:</label>
+      <input type="date" id="historyDate" name="historyDate" required />
+      <button type="submit">Show Orders</button>
+      <button type="button" onclick="closeDateSelectModal()">Cancel</button>
+    </form>
+  </div>
+</div>
+
+<div id="dateHistoryModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeDateHistoryModal()">×</span>
+    <h2>Order History for <span id="selectedDate"></span></h2>
+    <div id="dateHistoryContent">
+      <p>No orders found for this date.</p>
+    </div>
+  </div>
+</div>
+
+<div id="billModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeBillModal()">×</span>
+    <h2>Enter Customer Details</h2>
+    <form id="billForm">
+      <label for="customerName">Customer Name:</label>
+      <input type="text" id="customerName" name="customerName" required />
+      <label for="customerPhone">Phone Number:</label>
+      <input type="tel" id="customerPhone" name="customerPhone" required />
+      <button type="submit">OK</button>
+      <button type="button" onclick="closeBillModal()">Cancel</button>
+    </form>
+  </div>
+</div>
+
+<div id="billDisplayModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeBillDisplayModal()">×</span>
+    <div id="billContent"></div>
+    <button onclick="printBill()">Print</button>
+    <button onclick="closeBillDisplayModal()">Close</button>
+  </div>
+</div>
+
+<script>
+  const prices = {
+    // Starters
+    amritsari_paneer_tikka: 150,
+    hara_bhara_kabab: 120,
+    veg_pakora: 100,
+    corn_tikki: 110,
+    tandoori_mushroom: 140,
+    stuffed_paneer_roll: 130,
+    // Main Course - Dal Specialties
+    dal_makhani: 120,
+    dal_tadka: 100,
+    maa_di_dal: 110,
+    // Main Course - Paneer Delights
+    shahi_paneer: 180,
+    kadai_paneer: 170,
+    paneer_butter_masala: 190,
+    palak_paneer: 170,
+    paneer_bhurji: 160,
+    // Main Course - Other Curries
+    chole: 130,
+    rajma_masala: 120,
+    aloo_gobhi: 110,
+    baingan_bharta: 120,
+    mix_veg_curry: 130,
+    sarson_da_saag: 140,
+    // Rice & Pulao
+    steamed_basmati_rice: 80,
+    jeera_rice: 90,
+    veg_pulao: 100,
+    kashmiri_pulao: 120,
+    // Breads
+    tandoori_roti: 15,
+    butter_naan: 30,
+    plain_naan: 25,
+    lachha_paratha: 35,
+    missi_roti: 20,
+    makki_di_roti: 25,
+    // Sides & Salads
+    boondi_raita: 50,
+    cucumber_raita: 50,
+    plain_curd: 40,
+    green_salad: 60,
+    onion_lemon_platter: 30,
+    // Beverages
+    sweet_lassi: 40,
+    salted_lassi: 40,
+    mango_lassi: 50,
+    masala_chaas: 40,
+    fresh_lime_soda: 30,
+    chai: 20,
+    // Desserts
+    gulab_jamun: 60,
+    gajar_ka_halwa: 70,
+    rasmalai: 80,
+    phirni: 70,
+    kesar_kulfi: 80
+  };
+  const orders = {};
+  const latestOrderIndex = {};
+  let currentTable = null;
+  let billTableNum = null;
+  let billOrderIndex = null;
+  let isSubmitting = false;
+
+  const tablesContainer = document.getElementById("tablesContainer");
+  const orderModal = document.getElementById("orderModal");
+  const tableTotalModal = document.getElementById("tableTotalModal");
+  const historyModal = document.getElementById("historyModal");
+  const dateSelectModal = document.getElementById("dateSelectModal");
+  const dateHistoryModal = document.getElementById("dateHistoryModal");
+  const billModal = document.getElementById("billModal");
+  const billDisplayModal = document.getElementById("billDisplayModal");
+  const modalTableNumber = document.getElementById("modalTableNumber");
+  const orderForm = document.getElementById("orderForm");
+  const tableTotalForm = document.getElementById("tableTotalForm");
+  const historyForm = document.getElementById("historyForm");
+  const dateSelectForm = document.getElementById("dateSelectForm");
+  const billForm = document.getElementById("billForm");
+  const orderSelect = document.getElementById("orderSelect");
+  const historyTableSelect = document.getElementById("historyTableSelect");
+  const historyDateInput = document.getElementById("historyDate");
+  const addToOrderBtn = document.getElementById("addToOrderBtn");
+
+  let savedOrders;
+  try {
+    savedOrders = JSON.parse(localStorage.getItem('hotelOrders') || '{}');
+    if (!savedOrders || typeof savedOrders !== 'object') throw new Error("Invalid savedOrders");
+    console.log("Loaded from localStorage:", savedOrders);
+  } catch (e) {
+    console.error("Error loading localStorage, initializing empty:", e);
+    savedOrders = {};
+  }
+  for (let i = 1; i <= 10; i++) {
+    const table = document.createElement("div");
+    table.className = "table-card";
+    table.innerHTML = `
+      <h3>Table ${i}</h3>
+      <button onclick="openModal(${i})">Take/Update Order</button>
+      <div class="order-summary" id="order-${i}">No orders yet</div>
+    `;
+    tablesContainer.appendChild(table);
+    orders[i] = Array.isArray(savedOrders[i]) ? savedOrders[i] : [];
+    orders[i].forEach(order => {
+      if (!('billPrinted' in order)) order.billPrinted = false;
+    });
+    latestOrderIndex[i] = orders[i].length > 0 ? orders[i].length - 1 : -1;
+    console.log(`Initialized Table ${i}: orders.length=${orders[i].length}, latestOrderIndex=${latestOrderIndex[i]}`);
+    updateOrderDisplay(i);
+  }
+
+  function toggleNavMenu() {
+    const navMenu = document.querySelector('.nav-menu');
+    navMenu.classList.toggle('active');
+    console.log("Nav menu toggled, active:", navMenu.classList.contains('active'));
+  }
+
+  function formatDateToDDMMYYYY(date) {
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+
+  function restrictDateInput() {
+    const today = new Date();
+    const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+    historyDateInput.max = today.toISOString().split('T')[0];
+    historyDateInput.min = oneYearAgo.toISOString().split('T')[0];
+  }
+
+  function clearAllOrders() {
+    if (!confirm("Are you sure you want to delete ALL order records? This action cannot be undone.")) {
+      console.log("Clear all orders cancelled by user");
+      return;
+    }
+    if (!confirm("Final confirmation: This will erase all orders permanently. Proceed?")) {
+      console.log("Clear all orders cancelled on second confirmation");
+      return;
+    }
+    const backup = JSON.parse(localStorage.getItem('hotelOrders') || '{}');
+    console.log("Backup of orders before clearing:", backup);
+    localStorage.removeItem('hotelOrders');
+    for (let i = 1; i <= 10; i++) {
+      orders[i] = [];
+      latestOrderIndex[i] = -1;
+      updateOrderDisplay(i);
+    }
+    console.log("All order records cleared, system reset");
+  }
+
+  function openModal(tableNum) {
+    currentTable = tableNum;
+    modalTableNumber.innerText = tableNum;
+    updateOrderSelect(tableNum);
+    orderModal.style.display = "flex";
+    orderForm.reset();
+    loadOrderItems();
+
+    const items = orderForm.querySelectorAll('.item');
+    items.forEach(item => {
+      const minusBtn = item.querySelector('.minus-btn');
+      const plusBtn = item.querySelector('.plus-btn');
+      const input = item.querySelector('input');
+
+      minusBtn.onclick = () => {
+        let qty = parseInt(input.value) || 0;
+        if (qty > 0) {
+          qty--;
+          input.value = qty;
+          console.log(`Decreased ${input.name} to ${qty} for Table ${tableNum}`);
+        }
+      };
+
+      plusBtn.onclick = () => {
+        let qty = parseInt(input.value) || 0;
+        qty++;
+        input.value = qty;
+        console.log(`Increased ${input.name} to ${qty} for Table ${tableNum}`);
+      };
+    });
+  }
+
+  function updateOrderSelect(tableNum) {
+    orderSelect.innerHTML = '';
+    const newOption = document.createElement("option");
+    newOption.value = "new";
+    newOption.text = "New Order";
+    orderSelect.appendChild(newOption);
+
+    const latestIndex = latestOrderIndex[tableNum];
+    if (latestIndex >= 0) {
+      const option = document.createElement("option");
+      option.value = latestIndex;
+      option.text = `Order ${latestIndex + 1}`;
+      orderSelect.appendChild(option);
+    }
+    console.log("Updated order select for Table", tableNum, "with options:", orderSelect.options.length);
+  }
+
+  function loadOrderItems() {
+    const selectedOrder = orderSelect.value;
+    const inputs = orderForm.querySelectorAll('.quantity-control input');
+    inputs.forEach(input => input.value = 0);
+
+    if (selectedOrder !== "new") {
+      const order = orders[currentTable][parseInt(selectedOrder)];
+      for (const item in order.order) {
+        const input = orderForm.querySelector(`input[name="${item}"]`);
+        if (input) input.value = order.order[item];
+      }
+    }
+    console.log("Loaded order items for", selectedOrder === "new" ? "new order" : `Order ${parseInt(selectedOrder) + 1}`);
+  }
+
+  function closeModal() {
+    orderModal.style.display = "none";
+  }
+
+  function openTableTotalModal() {
+    tableTotalModal.style.display = "flex";
+    tableTotalForm.reset();
+  }
+
+  function closeTableTotalModal() {
+    tableTotalModal.style.display = "none";
+  }
+
+  function openHistoryModal() {
+    historyModal.style.display = "flex";
+    historyForm.reset();
+    document.getElementById("historyContent").innerHTML = "<p>Select a table to view its order history.</p>";
+    console.log("Opened history modal");
+  }
+
+  function closeHistoryModal() {
+    historyModal.style.display = "none";
+  }
+
+  function openDateSelectModal() {
+    dateSelectModal.style.display = "flex";
+    dateSelectForm.reset();
+    restrictDateInput();
+    console.log("Opened date select modal");
+  }
+
+  function closeDateSelectModal() {
+    dateSelectModal.style.display = "none";
+  }
+
+  function openDateHistoryModal(selectedDate) {
+    dateHistoryModal.style.display = "flex";
+    const [year, month, day] = selectedDate.split('-');
+    const formattedDisplayDate = `${day}/${month}/${year}`;
+    document.getElementById("selectedDate").innerText = formattedDisplayDate;
+    displayOrdersByDate(selectedDate);
+    console.log("Opened date history modal for", formattedDisplayDate);
+  }
+
+  function closeDateHistoryModal() {
+    dateHistoryModal.style.display = "none";
+  }
+
+  function displayOrderHistory() {
+    const tableNum = parseInt(historyTableSelect.value);
+    const historyContent = document.getElementById("historyContent");
+    if (!tableNum) {
+      historyContent.innerHTML = "<p>Select a table to view its order history.</p>";
+      return;
+    }
+
+    const tableOrders = orders[tableNum] || [];
+    if (tableOrders.length === 0) {
+      historyContent.innerHTML = `<p>No orders for Table ${tableNum}.</p>`;
+      return;
+    }
+
+    let html = `<table class="history-table">
+      <thead>
+        <tr>
+          <th>Order</th>
+          <th>Items</th>
+          <th>Total</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>`;
+    tableOrders.forEach((order, index) => {
+      let itemsHtml = '';
+      for (const item in order.order) {
+        if (order.order[item] > 0) {
+          const displayName = item
+            .split('_')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+          itemsHtml += `${displayName}: ${order.order[item]} x ₹${prices[item]} = ₹${order.order[item] * prices[item]}<br>`;
+        }
+      }
+      const buttonClass = order.billPrinted ? "history-btn printed-btn" : "history-btn";
+      html += `
+        <tr>
+          <td>Order ${index + 1}</td>
+          <td>${itemsHtml}</td>
+          <td>₹${order.total}</td>
+          <td>${order.date}</td>
+          <td>${order.time}</td>
+          <td><button class="${buttonClass}" onclick="openBillModal(${tableNum}, ${index})">Bill Print</button></td>
+        </tr>`;
+    });
+    html += `</tbody></table>`;
+    historyContent.innerHTML = html;
+    console.log("Displayed order history for Table", tableNum);
+  }
+
+  function displayOrdersByDate(selectedDate) {
+    const historyContent = document.getElementById("dateHistoryContent");
+    const [year, month, day] = selectedDate.split('-');
+    const formattedDate = `${day}/${month}/${year}`;
+    console.log("Selected date for filtering:", formattedDate);
+
+    let ordersOnDate = [];
+    for (let tableNum = 1; tableNum <= 10; tableNum++) {
+      const tableOrders = (orders[tableNum] || []).filter(order => order.date === formattedDate);
+      tableOrders.forEach((order, index) => {
+        ordersOnDate.push({ tableNum, order, originalIndex: orders[tableNum].indexOf(order) });
+      });
+    }
+
+    if (ordersOnDate.length === 0) {
+      historyContent.innerHTML = `<p>No orders found for ${formattedDate}.</p>`;
+      console.log("No orders found for date", formattedDate);
+      return;
+    }
+
+    let html = `<table class="history-table">
+      <thead>
+        <tr>
+          <th>Order</th>
+          <th>Table</th>
+          <th>Items</th>
+          <th>Total</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>`;
+    ordersOnDate.forEach(({ tableNum, order, originalIndex }) => {
+      let itemsHtml = '';
+      for (const item in order.order) {
+        if (order.order[item] > 0) {
+          const displayName = item
+            .split('_')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+          itemsHtml += `${displayName}: ${order.order[item]} x ₹${prices[item]} = ₹${order.order[item] * prices[item]}<br>`;
+        }
+      }
+      const buttonClass = order.billPrinted ? "history-btn printed-btn" : "history-btn";
+      html += `
+        <tr>
+          <td>Order ${originalIndex + 1}</td>
+          <td>Table ${tableNum}</td>
+          <td>${itemsHtml}</td>
+          <td>₹${order.total}</td>
+          <td>${order.date}</td>
+          <td>${order.time}</td>
+          <td><button class="${buttonClass}" onclick="openBillModal(${tableNum}, ${originalIndex})">Bill Print</button></td>
+        </tr>`;
+    });
+    html += `</tbody></table>`;
+    historyContent.innerHTML = html;
+    console.log("Displayed orders for date", formattedDate, "Orders found:", ordersOnDate.length);
+  }
+
+  dateSelectForm.onsubmit = function(e) {
+    e.preventDefault();
+    const formData = new FormData(dateSelectForm);
+    const selectedDate = formData.get("historyDate");
+    if (!selectedDate) {
+      alert("Please select a date.");
+      return;
+    }
+    console.log("Date selected:", selectedDate);
+    closeDateSelectModal();
+    openDateHistoryModal(selectedDate);
+  };
+
+  function openBillModal(tableNum, orderIndex) {
+    billTableNum = tableNum;
+    billOrderIndex = orderIndex;
+    billModal.style.display = "flex";
+    billForm.reset();
+    console.log("Opened bill modal for Table", tableNum, "Order", orderIndex + 1);
+  }
+
+  function closeBillModal() {
+    billModal.style.display = "none";
+    billTableNum = null;
+    billOrderIndex = null;
+  }
+
+  function openBillDisplayModal(content) {
+    document.getElementById("billContent").innerHTML = content;
+    billDisplayModal.style.display = "flex";
+  }
+
+  function closeBillDisplayModal() {
+    billDisplayModal.style.display = "none";
+  }
+
+  function printBill() {
+    window.print();
+  }
+
+  billForm.onsubmit = function(e) {
+    e.preventDefault();
+    const formData = new FormData(billForm);
+    const customerName = formData.get("customerName");
+    const customerPhone = formData.get("customerPhone");
+    console.log("Bill form submitted for Table", billTableNum, "Order", billOrderIndex + 1, "Customer:", customerName, customerPhone);
+
+    const order = orders[billTableNum][billOrderIndex];
+    order.billPrinted = true;
+    saveOrdersToLocalStorage();
+
+    let billHtml = `
+      <div class="bill-content">
+        <h2>Punjabi Hotel</h2>
+        <p>Table ${billTableNum} - Order ${billOrderIndex + 1}</p>
+        <p>Customer: ${customerName}</p>
+        <p>Phone: ${customerPhone}</p>
+        <p>Date: ${order.date}</p>
+        <p>Time: ${order.time}</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Quantity</th>
+              <th>Price</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>`;
+    for (const item in order.order) {
+      if (order.order[item] > 0) {
+        const displayName = item
+          .split('_')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+        billHtml += `
+          <tr>
+            <td>${displayName}</td>
+            <td>${order.order[item]}</td>
+            <td>₹${prices[item]}</td>
+            <td>₹${order.order[item] * prices[item]}</td>
+          </tr>`;
+      }
+    }
+    billHtml += `
+          </tbody>
+        </table>
+        <p class="total">Total: ₹${order.total}</p>
+      </div>`;
+    closeBillModal();
+    openBillDisplayModal(billHtml);
+    console.log("Bill printed for Table", billTableNum, "Order", billOrderIndex + 1, "billPrinted set to true");
+  };
+
+  function showAllTablesDayTotal() {
+    const today = formatDateToDDMMYYYY(new Date());
+    console.log("Checking all tables total for date:", today);
+    let totalOrders = 0, totalPrice = 0;
+    for (let i = 1; i <= 10; i++) {
+      const todayOrders = orders[i].filter(o => o.date === today);
+      totalOrders += todayOrders.length;
+      totalPrice += todayOrders.reduce((sum, o) => sum + o.total, 0);
+    }
+    alert(`All Tables Today:\nOrders: ${totalOrders}\nTotal: ₹${totalPrice}`);
+  }
+
+  function showDayItemBreakdown() {
+    const today = formatDateToDDMMYYYY(new Date());
+    console.log("Showing item breakdown for date:", today);
+    const itemTotals = {
+      starters: { amritsari_paneer_tikka: 0, hara_bhara_kabab: 0, veg_pakora: 0, corn_tikki: 0, tandoori_mushroom: 0, stuffed_paneer_roll: 0 },
+      dal_specialties: { dal_makhani: 0, dal_tadka: 0, maa_di_dal: 0 },
+      paneer_delights: { shahi_paneer: 0, kadai_paneer: 0, paneer_butter_masala: 0, palak_paneer: 0, paneer_bhurji: 0 },
+      other_curries: { chole: 0, rajma_masala: 0, aloo_gobhi: 0, baingan_bharta: 0, mix_veg_curry: 0, sarson_da_saag: 0 },
+      rice_pulao: { steamed_basmati_rice: 0, jeera_rice: 0, veg_pulao: 0, kashmiri_pulao: 0 },
+      breads: { tandoori_roti: 0, butter_naan: 0, plain_naan: 0, lachha_paratha: 0, missi_roti: 0, makki_di_roti: 0 },
+      sides_salads: { boondi_raita: 0, cucumber_raita: 0, plain_curd: 0, green_salad: 0, onion_lemon_platter: 0 },
+      beverages: { sweet_lassi: 0, salted_lassi: 0, mango_lassi: 0, masala_chaas: 0, fresh_lime_soda: 0, chai: 0 },
+      desserts: { gulab_jamun: 0, gajar_ka_halwa: 0, rasmalai: 0, phirni: 0, kesar_kulfi: 0 }
+    };
+
+    for (let i = 1; i <= 10; i++) {
+      orders[i].filter(o => o.date === today).forEach(o => {
+        for (let item in o.order) {
+          for (let category in itemTotals) {
+            if (item in itemTotals[category]) {
+              itemTotals[category][item] += o.order[item];
+            }
+          }
+        }
+      });
+    }
+
+    let msg = `Item Breakdown - ${today}:\n`;
+    let grandTotal = 0;
+
+    const categoryNames = {
+      starters: "Starters",
+      dal_specialties: "Dal Specialties",
+      paneer_delights: "Paneer Delights",
+      other_curries: "Other Curries",
+      rice_pulao: "Rice & Pulao",
+      breads: "Breads",
+      sides_salads: "Sides & Salads",
+      beverages: "Beverages",
+      desserts: "Desserts"
+    };
+
+    for (let category in itemTotals) {
+      let categoryHasItems = false;
+      let categoryMsg = `\n${categoryNames[category]}:\n`;
+      let categoryTotal = 0;
+      for (let item in itemTotals[category]) {
+        const qty = itemTotals[category][item];
+        if (qty > 0) {
+          const cost = qty * prices[item];
+          categoryTotal += cost;
+          const displayName = item
+            .split('_')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+          categoryMsg += `${displayName}: ${qty} x ₹${prices[item]} = ₹${cost}\n`;
+          categoryHasItems = true;
+        }
+      }
+      if (categoryHasItems) {
+        msg += categoryMsg;
+        grandTotal += categoryTotal;
+      }
+    }
+
+    if (grandTotal === 0) {
+      msg += "\nNo items ordered today.";
+    } else {
+      msg += `\nGrand Total: ₹${grandTotal}`;
+    }
+
+    alert(msg);
+  }
+
+  orderForm.onsubmit = function(e) {
+    e.preventDefault();
+    if (isSubmitting) {
+      console.log("Submission blocked: already processing");
+      return;
+    }
+    isSubmitting = true;
+    console.log("Form submitted for Table", currentTable, "Before submission: latestOrderIndex=", latestOrderIndex[currentTable], "orders.length=", orders[currentTable].length);
+    const formData = new FormData(orderForm);
+    const order = {}, now = new Date();
+    let total = 0;
+    formData.forEach((value, key) => {
+      if (key !== "orderSelect") {
+        const qty = parseInt(value) || 0;
+        if (qty > 0) {
+          order[key] = qty;
+          total += qty * prices[key];
+        }
+      }
+    });
+    if (total === 0) {
+      alert("Please add at least one item.");
+      isSubmitting = false;
+      return;
+    }
+    const date = formatDateToDDMMYYYY(now);
+    const time = now.toLocaleTimeString();
+    const day = now.toLocaleDateString(undefined, { weekday: 'long' });
+    const selectedOrder = formData.get("orderSelect");
+
+    console.log("Selected order:", selectedOrder, "Order data:", order, "Date:", date);
+    if (selectedOrder === "new") {
+      orders[currentTable].push({ order, total, date, time, day, billPrinted: false });
+      latestOrderIndex[currentTable] = orders[currentTable].length - 1;
+    } else {
+      const index = parseInt(selectedOrder);
+      orders[currentTable][index].order = order;
+      orders[currentTable][index].total = total;
+      orders[currentTable][index].time = time;
+      orders[currentTable][index].date = date;
+      orders[currentTable][index].day = day;
+      latestOrderIndex[currentTable] = index;
+    }
+    console.log("After submission: latestOrderIndex=", latestOrderIndex[currentTable], "orders.length=", orders[currentTable].length, "orders:", orders[currentTable]);
+    updateOrderDisplay(currentTable);
+    saveOrdersToLocalStorage();
+    closeModal();
+    setTimeout(() => { isSubmitting = false; }, 500);
+  };
+
+  addToOrderBtn.onclick = function() {
+    console.log("Add to Order button clicked");
+    orderForm.dispatchEvent(new Event('submit'));
+  };
+
+  tableTotalForm.onsubmit = function(e) {
+    e.preventDefault();
+    const tableNum = parseInt(new FormData(tableTotalForm).get("tableSelect"));
+    if (!tableNum) return alert("Please select a table.");
+    const today = formatDateToDDMMYYYY(new Date());
+    console.log("Checking table total for Table", tableNum, "Date:", today);
+    const todays = orders[tableNum].filter(o => o.date === today);
+    const sum = todays.reduce((acc, o) => acc + o.total, 0);
+    alert(`Table ${tableNum} Today:\nOrders: ${todays.length}\nTotal: ₹${sum}`);
+    closeTableTotalModal();
+  };
+
+  function updateOrderDisplay(tableNum) {
+    const container = document.getElementById(`order-${tableNum}`);
+    const latestIndex = latestOrderIndex[tableNum];
+    console.log(`Updating display for Table ${tableNum}: latestOrderIndex=${latestIndex}, orders.length=${orders[tableNum].length}`);
+    if (latestIndex < 0 || !orders[tableNum][latestIndex]) {
+      container.innerHTML = "No orders yet";
+      return;
+    }
+    const entry = orders[tableNum][latestIndex];
+    let html = `<strong>Current Order (Order ${latestIndex + 1}) - ${entry.day}, ${entry.date} ${entry.time}</strong><br>`;
+    for (const item in entry.order) {
+      if (entry.order[item] > 0) {
+        const displayName = item
+          .split('_')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+        html += `${displayName}: ${entry.order[item]} x ₹${prices[item]} = ₹${entry.order[item] * prices[item]}<br>`;
+      }
+    }
+    html += `<strong>Total: ₹${entry.total}</strong>`;
+    container.innerHTML = html;
+  }
+
+  function saveOrdersToLocalStorage() {
+    console.log("Saving to localStorage:", orders);
+    localStorage.setItem('hotelOrders', JSON.stringify(orders));
+  }
+</script>
+</body>
+</html>
